@@ -68,15 +68,15 @@
 
   --ring: oklch(0.708 0 0);
 
-  --chart-1: oklch(0.87 0 0);
+  --chart-1: oklch(0.55 0.15 142);
 
-  --chart-2: oklch(0.556 0 0);
+  --chart-2: oklch(0.65 0.15 85);
 
-  --chart-3: oklch(0.439 0 0);
+  --chart-3: oklch(0.55 0.2 25);
 
-  --chart-4: oklch(0.371 0 0);
+  --chart-4: oklch(0.55 0.15 250);
 
-  --chart-5: oklch(0.269 0 0);
+  --chart-5: oklch(0.55 0.15 300);
 
   --radius: 0.625rem;
 
@@ -110,6 +110,12 @@
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+    --chart-1: oklch(0.55 0.15 142);
+    --chart-2: oklch(0.65 0.15 85);
+    --chart-3: oklch(0.55 0.2 25);
+    --chart-4: oklch(0.55 0.15 250);
+    --chart-5: oklch(0.55 0.15 300);
   }
 
   #social .button-icon {
@@ -118,7 +124,7 @@
 }
 
 #root {
-  width: 1126px;
+  width: 100vw;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -252,6 +258,11 @@ code {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.65 0.15 142);
+  --chart-2: oklch(0.75 0.15 85);
+  --chart-3: oklch(0.65 0.2 25);
+  --chart-4: oklch(0.65 0.15 250);
+  --chart-5: oklch(0.65 0.15 300);
 }
 
 @layer base {

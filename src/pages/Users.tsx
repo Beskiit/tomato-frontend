@@ -1,7 +1,7 @@
 // src/pages/Users.tsx
 import { useEffect, useState } from "react";
-import { userApi } from '@/lib/api';
-import type { User } from '@/lib/api';
+import { userApi } from "@/lib/api";
+import type { User } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,12 +81,11 @@ export default function Users() {
             </SelectContent>
           </Select>
 
+          <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+            <Plus className="w-4 h-4" /> Add User
+          </Button>
+
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
-              <Button size="sm" className="gap-1.5">
-                <Plus className="w-4 h-4" /> Add User
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Account</DialogTitle>
@@ -157,6 +156,7 @@ export default function Users() {
 }
 
 function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -172,9 +172,18 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
 
   const submit = async () => {
     setLoading(true);
+    setErrors({});
     try {
       await userApi.create(form);
       onSuccess();
+    } catch (err: any) {
+      const e = err?.response?.data?.errors;
+      if (e)
+        setErrors(
+          Object.fromEntries(
+            Object.entries(e).map(([k, v]) => [k, (v as string[])[0]]),
+          ),
+        );
     } finally {
       setLoading(false);
     }
@@ -189,6 +198,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.full_name}
             onChange={(e) => set("full_name", e.target.value)}
           />
+          {errors.full_name && (
+            <p className="text-xs text-destructive">{errors.full_name}</p>
+          )}
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Email</Label>
@@ -197,6 +209,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.email}
             onChange={(e) => set("email", e.target.value)}
           />
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email}</p>
+          )}
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Password</Label>
@@ -205,6 +220,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.password}
             onChange={(e) => set("password", e.target.value)}
           />
+          {errors.password && (
+            <p className="text-xs text-destructive">{errors.password}</p>
+          )}
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Role</Label>
@@ -227,6 +245,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
                 value={form.farm_name}
                 onChange={(e) => set("farm_name", e.target.value)}
               />
+              {errors.farm_name && (
+                <p className="text-xs text-destructive">{errors.farm_name}</p>
+              )}
             </div>
             <div className="space-y-1.5 col-span-2">
               <Label>Address</Label>
@@ -234,6 +255,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
                 value={form.address}
                 onChange={(e) => set("address", e.target.value)}
               />
+              {errors.address && (
+                <p className="text-xs text-destructive">{errors.address}</p>
+              )}
             </div>
           </>
         )}
@@ -244,6 +268,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
               value={form.location}
               onChange={(e) => set("location", e.target.value)}
             />
+            {errors.location && (
+              <p className="text-xs text-destructive">{errors.location}</p>
+            )}
           </div>
         )}
         <div className="space-y-1.5 col-span-2">
@@ -252,6 +279,9 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.contact_number}
             onChange={(e) => set("contact_number", e.target.value)}
           />
+          {errors.contact_number && (
+            <p className="text-xs text-destructive">{errors.contact_number}</p>
+          )}
         </div>
       </div>
       <Button className="w-full mt-1" onClick={submit} disabled={loading}>
