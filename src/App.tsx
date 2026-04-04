@@ -4,13 +4,14 @@ import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Appointments from '@/pages/Appointments';
+import ActivityLogPage from '@/pages/ActivityLog';
 import AppointmentDetail from '@/pages/AppointmentDetail';
 import Notifications from '@/pages/Notifications';
 import Users from '@/pages/Users';
 import { useEffect, useState } from 'react';
 import { notificationApi } from '@/lib/api';
 import type { Notification } from '@/lib/api';
-import { Loader2, LayoutDashboard, CalendarDays, Users as UsersIcon, Bell, LogOut } from 'lucide-react';
+import { Loader2, LayoutDashboard, CalendarDays, Users as UsersIcon, Bell, LogOut, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function ProtectedLayout() {
@@ -38,6 +39,7 @@ function ProtectedLayout() {
     ...(user.role === 'admin'
       ? [{ to: '/users', icon: UsersIcon, label: 'Users', exact: false }]
       : []),
+    { to: '/activity-log', icon: Activity, label: 'Activity Log', exact: false },
   ];
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -99,6 +101,7 @@ function ProtectedLayout() {
             {user.role === 'admin' && (
               <Route path="/users" element={<Users />} />
             )}
+            <Route path="/activity-log" element={<ActivityLogPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
