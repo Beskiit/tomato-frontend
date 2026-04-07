@@ -1,10 +1,10 @@
-// src/pages/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import { dashboardApi, DashboardData, Appointment } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays, Clock, Users, CheckCircle2, Loader2 } from 'lucide-react';
+import { ChartAreaInteractive } from '@/components/ChartAreaInteractive';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -26,10 +26,10 @@ export default function Dashboard() {
   if (!data) return null;
 
   const stats = [
-    { label: 'Total Appointments', value: data.total_appointments, icon: CalendarDays, color: 'text-blue-600' },
-    { label: 'Pending',            value: data.pending_appointments, icon: Clock, color: 'text-amber-600' },
-    { label: 'Confirmed',          value: data.confirmed_appointments, icon: CheckCircle2, color: 'text-green-600' },
-    { label: 'Completed',          value: data.completed_appointments, icon: CheckCircle2, color: 'text-emerald-600' },
+    { label: 'Total Appointments', value: data.total_appointments,   icon: CalendarDays,  color: 'text-blue-600' },
+    { label: 'Pending',            value: data.pending_appointments,  icon: Clock,         color: 'text-amber-600' },
+    { label: 'Confirmed',          value: data.confirmed_appointments,icon: CheckCircle2,  color: 'text-green-600' },
+    { label: 'Completed',          value: data.completed_appointments,icon: CheckCircle2,  color: 'text-emerald-600' },
     ...(user?.role === 'admin' ? [
       { label: 'Total Farmers', value: data.total_farmers ?? 0, icon: Users, color: 'text-purple-600' },
       { label: 'Total Sorters', value: data.total_sorters ?? 0, icon: Users, color: 'text-rose-600' },
@@ -59,6 +59,9 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Area Chart */}
+      <ChartAreaInteractive />
 
       {/* Recent Appointments */}
       <Card>
