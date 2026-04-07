@@ -122,7 +122,7 @@ export default function AppointmentDetail() {
       {/* Start Session (sorter only, confirmed appointment, no session yet) */}
       {user?.role === 'sorter' && appointment.status === 'confirmed' && !session && (
         <Dialog open={sessionOpen} onOpenChange={setSessionOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button className="w-full gap-2">
               <Play className="w-4 h-4" /> Start Sorting Session
             </Button>
