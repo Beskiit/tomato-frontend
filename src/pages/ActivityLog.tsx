@@ -55,8 +55,7 @@ export default function ActivityLogPage() {
   const [page, setPage]               = useState(1);
   const [lastPage, setLastPage]       = useState(1);
   const [total, setTotal]             = useState(0);
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch]           = useState('');
+  const [search, setSearch] = useState('');
   const [action, setAction]           = useState('all');
   const [model, setModel]             = useState('all');
 
@@ -80,7 +79,6 @@ export default function ActivityLogPage() {
 
   useEffect(() => { load(1); }, [search, action, model]);
 
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); setSearch(searchInput); };
   const handleAction = (v: string | null) => { if (v) setAction(v); };
   const handleModel  = (v: string | null) => { if (v) setModel(v); };
 
@@ -97,17 +95,15 @@ export default function ActivityLogPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-[200px]">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search activity..."
-              className="pl-9"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-            />
-          </div>
-        </form>
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search activity..."
+            className="pl-9"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
 
         <Select value={action} onValueChange={handleAction}>
           <SelectTrigger className="w-[170px]">

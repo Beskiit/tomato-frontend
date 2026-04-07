@@ -50,7 +50,7 @@ function ProtectedLayout() {
     }`;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-56 border-r bg-background flex flex-col py-4 px-3 gap-1 shrink-0">
         <div className="px-2 mb-5">

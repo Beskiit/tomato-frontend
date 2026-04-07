@@ -177,13 +177,16 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
       await userApi.create(form);
       onSuccess();
     } catch (err: any) {
-      const e = err?.response?.data?.errors;
-      if (e)
-        setErrors(
-          Object.fromEntries(
-            Object.entries(e).map(([k, v]) => [k, (v as string[])[0]]),
-          ),
-        );
+      // Our fetch-based API client throws { status, message, errors }
+      if (err?.errors) {
+        const parsed: Record<string, string> = {};
+        Object.entries(err.errors).forEach(([k, v]) => {
+          parsed[k] = Array.isArray(v) ? v[0] : String(v);
+        });
+        setErrors(parsed);
+      } else if (err?.message) {
+        setErrors({ general: err.message });
+      }
     } finally {
       setLoading(false);
     }
@@ -191,6 +194,11 @@ function AddUserForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="space-y-3 mt-2">
+      {errors.general && (
+        <div className="bg-destructive/10 text-destructive text-sm px-4 py-3 rounded-md border border-destructive/20">
+          {errors.general}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5 col-span-2">
           <Label>Full Name</Label>
