@@ -200,7 +200,7 @@ function AppointmentCard({
                 </Button>
               </>
             )}
-            <Link to={`/appointments/${a.id}`}>
+            <Link to={`/dashboard?tab=appointment-detail&id=${a.id}`}>
               <Button size="icon" variant="ghost">
                 <ChevronRight className="w-4 h-4" />
               </Button>

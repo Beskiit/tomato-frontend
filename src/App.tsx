@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 function ProtectedLayout() {
   const { user, logout, isLoading } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (!user) return;
@@ -33,21 +34,37 @@ function ProtectedLayout() {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  const activeTab = searchParams.get('tab') ?? 'overview';
+
   const navItems = [
-    { to: '/',             icon: LayoutDashboard, label: 'Dashboard',    exact: true },
-    { to: '/appointments', icon: CalendarDays,    label: 'Appointments', exact: false },
+    { tab: 'overview', icon: LayoutDashboard, label: 'Dashboard' },
+    { tab: 'appointments', icon: CalendarDays, label: 'Appointments' },
     ...(user.role === 'admin'
-      ? [{ to: '/users', icon: UsersIcon, label: 'Users', exact: false }]
+      ? [{ tab: 'users', icon: UsersIcon, label: 'Users' }]
       : []),
-    { to: '/activity-log', icon: Activity, label: 'Activity Log', exact: false },
+    { tab: 'activity-log', icon: Activity, label: 'Activity Log' },
   ];
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
+  const linkClass = (isActive: boolean) =>
     `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
       isActive
         ? 'bg-primary text-primary-foreground font-medium'
         : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
     }`;
+
+  const switchTab = (tab: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    if (tab !== 'appointment-detail') next.delete('id');
+    setSearchParams(next);
+  };
+
+  let content = <Dashboard />;
+  if (activeTab === 'appointments') content = <Appointments />;
+  if (activeTab === 'notifications') content = <Notifications />;
+  if (activeTab === 'activity-log') content = <ActivityLogPage />;
+  if (activeTab === 'appointment-detail') content = <AppointmentDetail />;
+  if (activeTab === 'users' && user.role === 'admin') content = <Users />;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -59,13 +76,18 @@ function ProtectedLayout() {
         </div>
 
         {navItems.map(n => (
-          <NavLink key={n.to} to={n.to} end={n.exact} className={linkClass}>
+          <button
+            key={n.tab}
+            type="button"
+            onClick={() => switchTab(n.tab)}
+            className={linkClass(activeTab === n.tab)}
+          >
             <n.icon className="w-4 h-4 shrink-0" />
             {n.label}
-          </NavLink>
+          </button>
         ))}
 
-        <NavLink to="/notifications" className={linkClass}>
+        <button type="button" onClick={() => switchTab('notifications')} className={linkClass(activeTab === 'notifications')}>
           <div className="relative shrink-0">
             <Bell className="w-4 h-4" />
             {unread > 0 && (
@@ -75,7 +97,7 @@ function ProtectedLayout() {
             )}
           </div>
           Notifications
-        </NavLink>
+        </button>
 
         <div className="mt-auto px-1 pt-4 border-t">
           <p className="text-xs text-muted-foreground px-2 mb-1 truncate font-medium">{user.full_name}</p>
@@ -93,17 +115,7 @@ function ProtectedLayout() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6 bg-muted/30">
         <div className="max-w-5xl mx-auto">
-          <Routes>
-            <Route path="/"                element={<Dashboard />} />
-            <Route path="/appointments"    element={<Appointments />} />
-            <Route path="/appointments/:id" element={<AppointmentDetail />} />
-            <Route path="/notifications"   element={<Notifications />} />
-            {user.role === 'admin' && (
-              <Route path="/users" element={<Users />} />
-            )}
-            <Route path="/activity-log" element={<ActivityLogPage />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          {content}
         </div>
       </main>
     </div>
@@ -116,7 +128,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<PublicRoute />} />
-          <Route path="/*"     element={<ProtectedLayout />} />
+          <Route path="/dashboard" element={<ProtectedLayout />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -130,6 +143,6 @@ function PublicRoute() {
       <Loader2 className="w-8 h-8 animate-spin" />
     </div>
   );
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/dashboard" replace />;
   return <Login />;
 }

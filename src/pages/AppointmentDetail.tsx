@@ -1,6 +1,6 @@
 // src/pages/AppointmentDetail.tsx
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { appointmentApi, sessionApi, Appointment, SortingSession } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AppointmentDetail() {
-  const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get('id');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -27,6 +28,11 @@ export default function AppointmentDetail() {
   const [sessionOpen, setSessionOpen] = useState(false);
 
   const load = () => {
+    if (!id) {
+      setLoading(false);
+      setAppointment(null);
+      return;
+    }
     appointmentApi.get(Number(id))
       .then(setAppointment)
       .finally(() => setLoading(false));
@@ -55,7 +61,7 @@ export default function AppointmentDetail() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/appointments')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard?tab=appointments')}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
