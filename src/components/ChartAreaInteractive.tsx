@@ -108,7 +108,7 @@ export function ChartAreaInteractive() {
     }
 
     api
-      .get<any>("/appointments?per_page=200")
+      .get<any>("/appointments?per_page=200&status=completed&has_session=1")
       .then((res) => {
         const appointments = res.data ?? [];
 
