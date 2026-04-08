@@ -1,18 +1,34 @@
 // src/pages/Notifications.tsx
 import { useEffect, useState } from 'react';
 import { notificationApi, Notification } from '@/lib/api';
+import { getCached, isCacheStale, setCached } from '@/lib/queryCache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 
+const NOTIFICATIONS_CACHE_KEY = 'notifications:list';
+
 export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = () => {
+  const load = (force = false) => {
+    if (!force) {
+      const cached = getCached<Notification[]>(NOTIFICATIONS_CACHE_KEY);
+      if (cached) {
+        setNotifications(cached.data);
+        setLoading(false);
+
+        if (!isCacheStale(cached.updatedAt)) return;
+      }
+    }
+
     notificationApi.list()
-      .then(r => setNotifications(r.data))
+      .then(r => {
+        setNotifications(r.data);
+        setCached(NOTIFICATIONS_CACHE_KEY, r.data);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -20,14 +36,17 @@ export default function Notifications() {
 
   const markAllRead = async () => {
     await notificationApi.markAllRead();
-    load();
+    const next = notifications.map(n => ({ ...n, is_read: true }));
+    setNotifications(next);
+    setCached(NOTIFICATIONS_CACHE_KEY, next);
+    load(true);
   };
 
   const markRead = async (id: number) => {
     await notificationApi.markRead(id);
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-    );
+    const next = notifications.map(n => (n.id === id ? { ...n, is_read: true } : n));
+    setNotifications(next);
+    setCached(NOTIFICATIONS_CACHE_KEY, next);
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;

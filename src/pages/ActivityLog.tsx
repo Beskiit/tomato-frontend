@@ -1,6 +1,7 @@
 // src/pages/ActivityLog.tsx
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { getCached, isCacheStale, setCached } from '@/lib/queryCache';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,14 @@ interface Paginated {
   last_page: number;
   total: number;
 }
+
+const activityCacheKey = (
+  isAdmin: boolean,
+  page: number,
+  search: string,
+  action: string,
+  model: string
+) => `activity:${isAdmin ? 'admin' : 'user'}:${page}:${search}:${action}:${model}`;
 
 const ACTION_STYLES: Record<string, { color: string; icon: any }> = {
   logged_in:         { color: 'bg-green-100 text-green-800 border-green-200',     icon: LogIn },
@@ -59,12 +68,26 @@ export default function ActivityLogPage() {
   const [action, setAction]           = useState('all');
   const [model, setModel]             = useState('all');
 
-  const load = (p = 1) => {
+  const load = (p = 1, force = false) => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(p), per_page: '20' });
     if (search)                      params.append('search', search);
     if (action !== 'all')            params.append('action', action);
     if (isAdmin && model !== 'all')  params.append('model', model);
+    const key = activityCacheKey(!!isAdmin, p, search, action, model);
+
+    if (!force) {
+      const cached = getCached<Paginated>(key);
+      if (cached) {
+        setLogs(cached.data.data);
+        setPage(cached.data.current_page);
+        setLastPage(cached.data.last_page);
+        setTotal(cached.data.total);
+        setLoading(false);
+
+        if (!isCacheStale(cached.updatedAt)) return;
+      }
+    }
 
     api.get<Paginated>(`/activity-logs?${params}`)
       .then(res => {
@@ -72,6 +95,7 @@ export default function ActivityLogPage() {
         setPage(res.current_page);
         setLastPage(res.last_page);
         setTotal(res.total);
+        setCached(key, res);
       })
       .catch(console.error)
       .finally(() => setLoading(false));

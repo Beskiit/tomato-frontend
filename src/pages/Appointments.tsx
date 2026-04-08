@@ -31,6 +31,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getCached, invalidateCache, isCacheStale, setCached } from "@/lib/queryCache";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
@@ -39,16 +40,33 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 border-red-200",
 };
 
+const APPOINTMENTS_CACHE_KEY = "appointments:list";
+const DASHBOARD_CACHE_KEY = "dashboard:overview";
+const CHART_CACHE_KEY = "chart:overview";
+
 export default function Appointments() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
-  const load = () => {
+  const load = (force = false) => {
+    if (!force) {
+      const cached = getCached<Appointment[]>(APPOINTMENTS_CACHE_KEY);
+      if (cached) {
+        setAppointments(cached.data);
+        setLoading(false);
+
+        if (!isCacheStale(cached.updatedAt)) return;
+      }
+    }
+
     appointmentApi
       .list()
-      .then((r) => setAppointments(r.data))
+      .then((r) => {
+        setAppointments(r.data);
+        setCached(APPOINTMENTS_CACHE_KEY, r.data);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -88,7 +106,10 @@ export default function Appointments() {
               <BookForm
                 onSuccess={() => {
                   setOpen(false);
-                  load();
+                  invalidateCache(APPOINTMENTS_CACHE_KEY);
+                  invalidateCache(DASHBOARD_CACHE_KEY);
+                  invalidateCache(CHART_CACHE_KEY);
+                  load(true);
                 }}
               />
             </DialogContent>
@@ -124,7 +145,7 @@ function AppointmentCard({
 }: {
   appointment: Appointment;
   role: string;
-  onRefresh: () => void;
+  onRefresh: (force?: boolean) => void;
 }) {
   const counterpart =
     role === "farmer"
@@ -133,7 +154,10 @@ function AppointmentCard({
 
   const handleStatus = async (status: string) => {
     await appointmentApi.updateStatus(a.id, status);
-    onRefresh();
+    invalidateCache(APPOINTMENTS_CACHE_KEY);
+    invalidateCache(DASHBOARD_CACHE_KEY);
+    invalidateCache(CHART_CACHE_KEY);
+    onRefresh(true);
   };
 
   return (

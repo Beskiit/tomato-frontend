@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { dashboardApi, DashboardData, Appointment } from '@/lib/api';
+import { getCached, isCacheStale, setCached } from '@/lib/queryCache';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays, Clock, Users, CheckCircle2, Loader2 } from 'lucide-react';
 import { ChartAreaInteractive } from '@/components/ChartAreaInteractive';
+
+const DASHBOARD_CACHE_KEY = 'dashboard:overview';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -12,7 +15,27 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dashboardApi.get().then(setData).finally(() => setLoading(false));
+    let mounted = true;
+    const cached = getCached<DashboardData>(DASHBOARD_CACHE_KEY);
+
+    if (cached) {
+      setData(cached.data);
+      setLoading(false);
+
+      if (!isCacheStale(cached.updatedAt)) return;
+    }
+
+    dashboardApi.get().then((next) => {
+      if (!mounted) return;
+      setData(next);
+      setCached(DASHBOARD_CACHE_KEY, next);
+    }).finally(() => {
+      if (mounted) setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {

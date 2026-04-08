@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { api } from "@/lib/api";
+import { getCached, isCacheStale, setCached } from "@/lib/queryCache";
 
 import {
   Card,
@@ -77,6 +78,13 @@ interface AppointmentEntry {
   completed: number;
 }
 
+interface ChartCachePayload {
+  tomatoData: TomatoEntry[];
+  apptData: AppointmentEntry[];
+}
+
+const CHART_CACHE_KEY = "chart:overview";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ChartAreaInteractive() {
@@ -87,7 +95,18 @@ export function ChartAreaInteractive() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    let mounted = true;
     setLoading(true);
+
+    const cached = getCached<ChartCachePayload>(CHART_CACHE_KEY);
+    if (cached) {
+      setTomatoData(cached.data.tomatoData);
+      setApptData(cached.data.apptData);
+      setLoading(false);
+
+      if (!isCacheStale(cached.updatedAt)) return;
+    }
+
     api
       .get<any>("/appointments?per_page=200")
       .then((res) => {
@@ -130,11 +149,22 @@ export function ChartAreaInteractive() {
         const sortByDate = (a: { date: string }, b: { date: string }) =>
           new Date(a.date).getTime() - new Date(b.date).getTime();
 
-        setTomatoData(Object.values(tomatoGrouped).sort(sortByDate));
-        setApptData(Object.values(apptGrouped).sort(sortByDate));
+        const nextTomato = Object.values(tomatoGrouped).sort(sortByDate);
+        const nextAppt = Object.values(apptGrouped).sort(sortByDate);
+
+        if (!mounted) return;
+        setTomatoData(nextTomato);
+        setApptData(nextAppt);
+        setCached(CHART_CACHE_KEY, { tomatoData: nextTomato, apptData: nextAppt });
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // ── Filter by time range ───────────────────────────────────────────────────

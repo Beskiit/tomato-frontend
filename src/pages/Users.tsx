@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, UserCircle } from "lucide-react";
+import { getCached, invalidateCacheByPrefix, isCacheStale, setCached } from "@/lib/queryCache";
 
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-purple-100 text-purple-800 border-purple-200",
@@ -29,16 +30,34 @@ const ROLE_COLORS: Record<string, string> = {
   farmer: "bg-green-100 text-green-800 border-green-200",
 };
 
+const usersCacheKey = (role: string) => `users:list:${role}`;
+
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("all");
 
-  const load = (role?: string) => {
+  const load = (role?: string, force = false) => {
+    const activeRole = role && role !== "all" ? role : "all";
+    const key = usersCacheKey(activeRole);
+
+    if (!force) {
+      const cached = getCached<User[]>(key);
+      if (cached) {
+        setUsers(cached.data);
+        setLoading(false);
+
+        if (!isCacheStale(cached.updatedAt)) return;
+      }
+    }
+
     userApi
       .list(role && role !== "all" ? role : undefined)
-      .then((r) => setUsers(r.data))
+      .then((r) => {
+        setUsers(r.data);
+        setCached(key, r.data);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -49,7 +68,8 @@ export default function Users() {
   const deleteUser = async (id: number) => {
     if (!confirm("Delete this user?")) return;
     await userApi.delete(id);
-    load(filter);
+    invalidateCacheByPrefix("users:list:");
+    load(filter, true);
   };
 
   if (loading)
@@ -93,7 +113,8 @@ export default function Users() {
               <AddUserForm
                 onSuccess={() => {
                   setOpen(false);
-                  load(filter);
+                  invalidateCacheByPrefix("users:list:");
+                  load(filter, true);
                 }}
               />
             </DialogContent>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { appointmentApi, sessionApi, Appointment, SortingSession } from '@/lib/api';
+import { getCached, invalidateCache, isCacheStale, setCached } from '@/lib/queryCache';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,11 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800 border-red-200',
 };
 
+const APPOINTMENTS_CACHE_KEY = 'appointments:list';
+const DASHBOARD_CACHE_KEY = 'dashboard:overview';
+const CHART_CACHE_KEY = 'chart:overview';
+const detailCacheKey = (id: string) => `appointments:detail:${id}`;
+
 export default function AppointmentDetail() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
@@ -27,14 +33,29 @@ export default function AppointmentDetail() {
   const [loading, setLoading] = useState(true);
   const [sessionOpen, setSessionOpen] = useState(false);
 
-  const load = () => {
+  const load = (force = false) => {
     if (!id) {
       setLoading(false);
       setAppointment(null);
       return;
     }
+    const key = detailCacheKey(id);
+
+    if (!force) {
+      const cached = getCached<Appointment>(key);
+      if (cached) {
+        setAppointment(cached.data);
+        setLoading(false);
+
+        if (!isCacheStale(cached.updatedAt)) return;
+      }
+    }
+
     appointmentApi.get(Number(id))
-      .then(setAppointment)
+      .then(next => {
+        setAppointment(next);
+        setCached(key, next);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -43,7 +64,11 @@ export default function AppointmentDetail() {
   const completeSession = async () => {
     if (!appointment?.sorting_session) return;
     await sessionApi.complete(appointment.sorting_session.id);
-    load();
+    if (id) invalidateCache(detailCacheKey(id));
+    invalidateCache(APPOINTMENTS_CACHE_KEY);
+    invalidateCache(DASHBOARD_CACHE_KEY);
+    invalidateCache(CHART_CACHE_KEY);
+    load(true);
   };
 
   if (loading) return (
@@ -139,7 +164,7 @@ export default function AppointmentDetail() {
             </DialogHeader>
             <StartSessionForm
               appointmentId={appointment.id}
-              onSuccess={() => { setSessionOpen(false); load(); }}
+              onSuccess={() => { setSessionOpen(false); load(true); }}
             />
           </DialogContent>
         </Dialog>
@@ -190,6 +215,10 @@ function StartSessionForm({ appointmentId, onSuccess }: {
     setLoading(true);
     try {
       await sessionApi.create(appointmentId, piId.trim());
+      invalidateCache(detailCacheKey(String(appointmentId)));
+      invalidateCache(APPOINTMENTS_CACHE_KEY);
+      invalidateCache(DASHBOARD_CACHE_KEY);
+      invalidateCache(CHART_CACHE_KEY);
       onSuccess();
     } finally {
       setLoading(false);
