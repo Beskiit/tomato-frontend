@@ -13,6 +13,7 @@ import { notificationApi } from '@/lib/api';
 import type { Notification } from '@/lib/api';
 import { Loader2, LayoutDashboard, CalendarDays, Users as UsersIcon, Bell, LogOut, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CalendarDemo } from '@/components/Calendar';
 
 function ProtectedLayout() {
   const { user, logout, isLoading } = useAuth();
@@ -71,7 +72,7 @@ function ProtectedLayout() {
       {/* Sidebar */}
       <aside className="w-56 border-r bg-background flex flex-col py-4 px-3 gap-1 shrink-0">
         <div className="px-2 mb-5">
-          <span className="text-lg font-bold tracking-tight">🍅 TomatoSort</span>
+          <span className="text-lg font-bold tracking-tight">AIgriculture</span>
           <p className="text-[11px] text-muted-foreground capitalize mt-0.5">{user.role}</p>
         </div>
 
@@ -118,6 +119,9 @@ function ProtectedLayout() {
           {content}
         </div>
       </main>
+      <div className="flex px-2">
+        <CalendarDemo />
+      </div>
     </div>
   );
 }

@@ -201,24 +201,28 @@ export default function ActivityLogPage() {
                         {log.model_type && (
                           <Badge variant="outline" className="text-[11px] flex items-center gap-1">
                             <MIcon className="w-2.5 h-2.5" />
-                            {log.model_type} {log.model_id ? `#${log.model_id}` : ''}
+                            {log.user?.full_name}
                           </Badge>
                         )}
                       </div>
                       <p className="text-sm text-foreground">{log.description}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex justify-between items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
                         {/* User info and IP — admin only */}
-                        {isAdmin && log.user && (
-                          <span className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {log.user.full_name}
-                            <span className="capitalize opacity-60">({log.user.role})</span>
-                          </span>
-                        )}
-                        {isAdmin && log.ip_address && (
-                          <span className="opacity-60">IP: {log.ip_address}</span>
-                        )}
-                        <span>{new Date(log.performed_at).toLocaleString()}</span>
+                        <div className="flex flex-1 gap-2">
+                          {isAdmin && log.user && (
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {log.user.email}
+                              <span className="capitalize opacity-60">({log.user.role})</span>
+                            </span>
+                          )}
+                          {isAdmin && log.ip_address && (
+                            <span className="opacity-60">IP: {log.ip_address}</span>
+                          )}
+                        </div>
+                        <div className="">
+                          <span>{new Date(log.performed_at).toLocaleString()}</span>
+                        </div>
                       </div>
 
                       {/* Changes diff */}

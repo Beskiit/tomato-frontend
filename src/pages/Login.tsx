@@ -31,7 +31,7 @@ export default function Login() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="text-3xl mb-1">🍅</div>
-          <CardTitle className="text-xl">Tomato Sorter</CardTitle>
+          <CardTitle className="text-xl">AIgriculture</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
