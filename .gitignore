@@ -13,6 +13,11 @@ dist-ssr
 *.local
 .env
 .env.*.local
+.next
+tsconfig.tsbuildinfo
+*.pack.gz
+index.pack.gz
+index.pack.gz.old
 
 # Editor directories and files
 .vscode/*
