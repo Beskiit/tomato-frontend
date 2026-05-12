@@ -1,13 +1,13 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Appointments from '@/pages/Appointments';
-import ActivityLogPage from '@/pages/ActivityLog';
-import AppointmentDetail from '@/pages/AppointmentDetail';
-import Notifications from '@/pages/Notifications';
-import Users from '@/pages/Users';
+import Login from '@/views/Login';
+import Dashboard from '@/views/Dashboard';
+import Appointments from '@/views/Appointments';
+import ActivityLogPage from '@/views/ActivityLog';
+import AppointmentDetail from '@/views/AppointmentDetail';
+import Notifications from '@/views/Notifications';
+import Users from '@/views/Users';
 import { useEffect, useState } from 'react';
 import { notificationApi } from '@/lib/api';
 import type { Notification } from '@/lib/api';

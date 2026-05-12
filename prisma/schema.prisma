@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  fullName      String        @map("full_name")
+  email         String        @unique
+  passwordHash  String        @map("password_hash")
+  role          String
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  farmer        Farmer?
+  sorter        Sorter?
+  notifications Notification[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model Farmer {
+  id            Int           @id @default(autoincrement())
+  userId        Int           @unique @map("user_id")
+  farmName      String        @map("farm_name")
+  contactNumber String?       @map("contact_number")
+  address       String?
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+
+  @@map("farmers")
+}
+
+model Sorter {
+  id            Int           @id @default(autoincrement())
+  userId        Int           @unique @map("user_id")
+  location      String
+  contactNumber String?       @map("contact_number")
+  isAvailable   Boolean       @default(true) @map("is_available")
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+
+  @@map("sorters")
+}
+
+model Appointment {
+  id             Int             @id @default(autoincrement())
+  farmerId       Int             @map("farmer_id")
+  sorterId       Int             @map("sorter_id")
+  scheduledDate  DateTime        @map("scheduled_date") @db.Date
+  scheduledTime  String          @map("scheduled_time")
+  status         String          @default("pending")
+  notes          String?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  farmer         Farmer          @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  sorter         Sorter          @relation(fields: [sorterId], references: [id], onDelete: Cascade)
+  sortingSession SortingSession?
+  notifications  Notification[]
+
+  @@map("appointments")
+}
+
+model SortingSession {
+  id             Int          @id @default(autoincrement())
+  appointmentId  Int          @unique @map("appointment_id")
+  startedAt      DateTime?    @map("started_at")
+  endedAt        DateTime?    @map("ended_at")
+  ripeCount      Int          @default(0) @map("ripe_count")
+  unripeCount    Int          @default(0) @map("unripe_count")
+  rottenCount    Int          @default(0) @map("rotten_count")
+  raspberryPiId  String?      @map("raspberry_pi_id")
+  sessionStatus  String       @default("in_progress") @map("session_status")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  appointment    Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  sortingLogs    SortingLog[]
+
+  @@map("sorting_sessions")
+}
+
+model SortingLog {
+  id                   Int            @id @default(autoincrement())
+  sessionId            Int            @map("session_id")
+  loggedAt             DateTime       @default(now()) @map("logged_at")
+  tomatoClassification String         @map("tomato_classification")
+  imagePath            String?        @map("image_path")
+  aiConfidence         Decimal?       @map("ai_confidence") @db.Decimal(3, 2)
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+  session              SortingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("sorting_logs")
+}
+
+model Notification {
+  id            Int          @id @default(autoincrement())
+  userId        Int          @map("user_id")
+  appointmentId Int?         @map("appointment_id")
+  message       String
+  isRead        Boolean      @default(false) @map("is_read")
+  sentAt        DateTime     @default(now()) @map("sent_at")
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  action      String
+  modelType   String?  @map("model_type")
+  modelId     Int?     @map("model_id")
+  description String
+  changes     Json?
+  ipAddress   String?  @map("ip_address")
+  performedAt DateTime @default(now()) @map("performed_at")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
+}
