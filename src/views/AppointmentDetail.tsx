@@ -61,6 +61,19 @@ export default function AppointmentDetail() {
 
   useEffect(() => { load(); }, [id]);
 
+  useEffect(() => {
+    if (!id || appointment?.sorting_session?.session_status !== 'in_progress') return;
+    const interval = setInterval(() => {
+      appointmentApi.get(Number(id))
+        .then(next => {
+          setAppointment(next);
+          setCached(detailCacheKey(id), next);
+        })
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [id, appointment?.sorting_session?.session_status]);
+
   const completeSession = async () => {
     if (!appointment?.sorting_session) return;
     await sessionApi.complete(appointment.sorting_session.id);
